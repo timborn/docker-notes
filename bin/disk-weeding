@@ -1,0 +1,19 @@
+#!/bin/bash
+# https://lebkowski.name/docker-volumes/
+# XARGS="-r"	# unix, linux
+XARGS=""	# osx
+
+# remove stopped containers
+docker container prune
+
+# remove images not currently being used, to free up disk space
+docker images | awk '{print $1":"$2}' | xargs $XARGS docker rmi
+
+# dead and exited images persist until you blow them away
+# if you don't need to analyze logs, get rid of them
+# may want to run this script twice, as this could free up
+# blocked images above
+docker ps --filter status=dead --filter status=exited -aq | xargs $XARGS docker rm -v
+
+echo The following volumes are on the host machine and do not appear to be used:
+docker volume ls -qf dangling=true
